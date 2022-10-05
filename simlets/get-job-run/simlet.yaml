@@ -1,0 +1,57 @@
+simlet: get-job-run
+
+request:  
+  - method: POST
+  - uriPath: /
+  - where: header
+    named: "x-amz-target"
+    contains: "AWSGlue.GetJobRun"
+
+RunId:  
+  is: parameter
+  from: body
+  element: .RunId
+
+JobName:
+  is: parameter
+  from: body
+  element: .JobName
+
+JobRuns:  
+  is: parameter
+  from: kvStore
+  named: start-job-runs
+
+JobRunExists:  
+  is: parameter
+  from: constant
+  eval: return JobRuns.containsKey(RunId)
+
+responses:
+  - when:
+      request:
+        - where: parameter
+          named: JobRunExists
+          equals: false
+    from: template
+    headers:
+      - "Content-Type: application/json"
+    status: 400
+    body: |+
+      {
+        "__type": "com.amazonaws.glue.v3#EntityNotFoundException",
+        "message": "RunId ${RunId} not found"
+      }
+
+  - from: template
+    status: 200
+    headers:
+      - "Content-Type: application/json"
+    body: |+
+      {
+        "JobRun": {
+          "Id": "${RunId}",
+          "JobName": "${JobName}",
+          "JobRunState": "SUCCEEDED"
+        }
+      }

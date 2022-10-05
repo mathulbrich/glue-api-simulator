@@ -1,0 +1,28 @@
+simlet: start-job-run
+
+request:  
+  - method: POST
+  - uriPath: /
+  - where: header
+    named: "x-amz-target"
+    contains: "AWSGlue.StartJobRun"
+
+JobRunId:  
+  is: parameter
+  from: uuid
+
+JobRuns:  
+  is: parameter
+  from: kvStore
+  named: start-job-runs
+
+response:
+  from: template
+  status: 200
+  headers:
+    - "Content-Type: application/json"
+  body: |+
+    {
+      "JobRunId": "${JobRunId}"
+    }
+    <% JobRuns.put(JobRunId, JobRunId) %>
