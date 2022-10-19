@@ -7,6 +7,11 @@ request:
     named: "x-amz-target"
     contains: "AWSGlue.StartJobRun"
 
+JobName:
+  is: parameter
+  from: body
+  element: .JobName
+
 JobRunId:  
   is: parameter
   from: uuid
@@ -25,4 +30,4 @@ response:
     {
       "JobRunId": "${JobRunId}"
     }
-    <% JobRuns.put(JobRunId, JobRunId) %>
+    <% JobRuns.put(JobName, [JobName: JobName, JobRunId: JobRunId]) %>

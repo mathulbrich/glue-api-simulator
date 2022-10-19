@@ -1,31 +1,31 @@
-simlet: get-job-run
+simlet: get-job-runs
 
 request:  
   - method: POST
   - uriPath: /
   - where: header
     named: "x-amz-target"
-    contains: "AWSGlue.GetJobRun"
-
-RunId:  
-  is: parameter
-  from: body
-  element: .RunId
+    contains: "AWSGlue.GetJobRuns"
 
 JobName:
   is: parameter
   from: body
   element: .JobName
 
-JobRuns:
+JobRuns:  
   is: parameter
   from: kvStore
   named: start-job-runs
 
+JobRunsData:
+  is: parameter
+  from: constant
+  eval: return JobRuns.get(JobName)
+
 JobRunExists:
   is: parameter
   from: constant
-  eval: return JobRuns.containsKey(JobName) && JobRuns.get(JobName).JobRunId == RunId
+  eval: return JobRuns.containsKey(JobName)
 
 responses:
   - when:
@@ -36,11 +36,10 @@ responses:
     from: template
     headers:
       - "Content-Type: application/json"
-    status: 400
+    status: 200
     body: |+
       {
-        "__type": "com.amazonaws.glue.v3#EntityNotFoundException",
-        "message": "RunId ${RunId} not found"
+        "JobRuns": []
       }
 
   - from: template
@@ -49,9 +48,11 @@ responses:
       - "Content-Type: application/json"
     body: |+
       {
-        "JobRun": {
-          "Id": "${RunId}",
-          "JobName": "${JobName}",
-          "JobRunState": "SUCCEEDED"
-        }
+        "JobRuns": [
+          {
+            "Id": "${JobRunsData.JobRunId}",
+            "JobName": "${JobRunsData.JobName}",
+            "JobRunState": "SUCCEEDED"
+          }
+        ]
       }
