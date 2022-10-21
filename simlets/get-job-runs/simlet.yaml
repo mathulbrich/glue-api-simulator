@@ -5,7 +5,7 @@ request:
   - uriPath: /
   - where: header
     named: "x-amz-target"
-    contains: "AWSGlue.GetJobRuns"
+    equals: "AWSGlue.GetJobRuns"
 
 JobName:
   is: parameter
