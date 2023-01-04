@@ -22,6 +22,27 @@ JobRuns:
   from: kvStore
   named: start-job-runs
 
+InternalJobArguments:
+  is: parameter
+  from: constant
+  eval: return JobRuns.get(JobName).JobArguments
+
+GetJobArgumentsScript:
+  is: script
+  executor:
+    lang: javascript
+  expression: >
+    function getJobArguments() {
+      var arguments = "" + _context.getValue('InternalJobArguments');
+      return JSON.stringify(JSON.parse(arguments.replace(/([a-zA-Z0-9-_]+)=([^,|}]+)/g, '"$1":"$2"')));
+    }
+    getJobArguments();
+
+JobArguments:
+  is: parameter
+  from: script
+  script: "GetJobArgumentsScript"
+
 JobRunExists:
   is: parameter
   from: constant
@@ -50,6 +71,7 @@ responses:
     body: |+
       {
         "JobRun": {
+          "Arguments": ${JobArguments},
           "Id": "${RunId}",
           "JobName": "${JobName}",
           "JobRunState": "SUCCEEDED"

@@ -22,10 +22,31 @@ JobRunsData:
   from: constant
   eval: return JobRuns.get(JobName)
 
+InternalJobArguments:
+  is: parameter
+  from: constant
+  eval: return JobRuns.get(JobName).JobArguments
+
 JobRunExists:
   is: parameter
   from: constant
   eval: return JobRuns.containsKey(JobName)
+
+GetJobArgumentsScript:
+  is: script
+  executor:
+    lang: javascript
+  expression: >
+    function getJobArguments() {
+      var arguments = "" + _context.getValue('InternalJobArguments');
+      return JSON.stringify(JSON.parse(arguments.replace(/([a-zA-Z0-9-_]+)=([^,|}]+)/g, '"$1":"$2"')));
+    }
+    getJobArguments();
+
+JobArguments:
+  is: parameter
+  from: script
+  script: "GetJobArgumentsScript"
 
 responses:
   - when:
@@ -50,6 +71,7 @@ responses:
       {
         "JobRuns": [
           {
+            "Arguments": ${JobArguments},
             "Id": "${JobRunsData.JobRunId}",
             "JobName": "${JobRunsData.JobName}",
             "JobRunState": "SUCCEEDED"
